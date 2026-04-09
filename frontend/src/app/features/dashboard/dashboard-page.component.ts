@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -9,6 +9,7 @@ import { AuthService } from '../../core/auth.service';
 import { TaskItem, UserProfile } from '../../core/models';
 import { TaskService } from '../../core/task.service';
 import { UserService } from '../../core/user.service';
+import { RealtimeService } from '../../core/realtime.service';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -20,7 +21,9 @@ import { UserService } from '../../core/user.service';
 export class DashboardPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly taskService = inject(TaskService);
+  private readonly realtimeService = inject(RealtimeService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
 
@@ -41,6 +44,8 @@ export class DashboardPageComponent {
   });
 
   constructor() {
+    this.realtimeService.connect(() => this.refreshTasks());
+    this.destroyRef.onDestroy(() => this.realtimeService.disconnect());
     this.loadDashboard();
   }
 
